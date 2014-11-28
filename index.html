@@ -1,0 +1,72 @@
+
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>pixi.js example 1</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000000;
+        }
+    </style>
+    <script src="pixi.js"></script>
+
+</head>
+<body>
+    <script>
+    var stage = new PIXI.Stage(0x66FF99);
+
+    var renderer = new PIXI.WebGLRenderer(400, 400);
+
+    document.body.appendChild(renderer.view);
+
+    requestAnimFrame( animate );
+
+    var bodyTexture = PIXI.Texture.fromImage("robot-body.png");
+    var bodySprite = new PIXI.Sprite(bodyTexture);
+    bodySprite.anchor.x = 0.5;
+    bodySprite.anchor.y = 0.5;
+
+    var turretTexture = PIXI.Texture.fromImage("robot-turret.png");
+    var turretSprite = new PIXI.Sprite(turretTexture);
+    turretSprite.anchor.x = 0.5;
+    turretSprite.anchor.y = 0.5;
+
+    var radarTexture = PIXI.Texture.fromImage("robot-radar.png");
+    var radarSprite = new PIXI.Sprite(radarTexture);
+    radarSprite.anchor.x = 0.5;
+    radarSprite.anchor.y = 0.5;
+
+    bodySprite.addChild(turretSprite);
+    turretSprite.addChild(radarSprite);
+    stage.addChild(bodySprite);
+
+    var ticks;
+    var tick = 0;
+    var endTick = 0;
+    var loader = new PIXI.JsonLoader("http://localhost:3008/replays/1");
+    loader.on('loaded', function(evt) {
+        ticks = evt.content.json.ticks;
+        endTick =  ticks.length;
+    });
+    loader.load();
+
+    function animate() {
+        requestAnimFrame( animate );
+        if(tick < endTick) {
+            bodySprite.position.x = ticks[tick].robotStates[0].x;
+            bodySprite.position.y = ticks[tick].robotStates[0].y;
+            turretSprite.rotation += 0.1;
+            radarSprite.rotation -= 0.5;
+            tick++;
+            // render the stage
+            renderer.render(stage);
+        }
+    }
+
+    </script>
+
+    </body>
+</html>
+
