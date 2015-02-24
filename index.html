@@ -15,19 +15,35 @@
 </head>
 <body>
     <script>
+    var ticks;
+    var tick = 0;
+    var endTick = 0;
+    var width = 800;
+    var height = 800;
+    var loader = new PIXI.JsonLoader("http://localhost:3008/replays/1");
+    loader.on('loaded', function(event) {
+        console.log(event.content.content.json);
+        ticks = event.content.content.json.ticks;
+        endTick =  ticks.length;
+    });
+    loader.load();
+
     var stage = new PIXI.Stage(0x66FF99);
 
-    var renderer = new PIXI.WebGLRenderer(400, 400);
+    var renderer = new PIXI.WebGLRenderer(width, height);
 
     document.body.appendChild(renderer.view);
 
     requestAnimFrame( animate );
 
+
+
+
     var bodyTexture = PIXI.Texture.fromImage("robot-body.png");
     var bodySprite = new PIXI.Sprite(bodyTexture);
     bodySprite.anchor.x = 0.5;
     bodySprite.anchor.y = 0.5;
-
+ 
     var turretTexture = PIXI.Texture.fromImage("robot-turret.png");
     var turretSprite = new PIXI.Sprite(turretTexture);
     turretSprite.anchor.x = 0.5;
@@ -42,23 +58,18 @@
     turretSprite.addChild(radarSprite);
     stage.addChild(bodySprite);
 
-    var ticks;
-    var tick = 0;
-    var endTick = 0;
-    var loader = new PIXI.JsonLoader("http://localhost:3008/replays/1");
-    loader.on('loaded', function(evt) {
-        ticks = evt.content.json.ticks;
-        endTick =  ticks.length;
-    });
-    loader.load();
-
     function animate() {
         requestAnimFrame( animate );
         if(tick < endTick) {
-            bodySprite.position.x = ticks[tick].robotStates[0].x;
-            bodySprite.position.y = ticks[tick].robotStates[0].y;
-            turretSprite.rotation += 0.1;
-            radarSprite.rotation -= 0.5;
+            state = ticks[tick].robotStates[0];
+            bodySprite.position.x = state.position.x;
+            bodySprite.position.y = state.position.y;
+            bodySprite.rotation = state.heading * Math.PI / 180.0;
+            console.log(bodySprite.rotation);
+            turretSprite.rotation = (state.gunHeading - state.heading) * Math.PI / 180;
+            console.log(turretSprite.rotation);
+            radarSprite.rotation = (state.radarheading - state.gunHeading - state.heading) * Math.PI/180;
+            console.log(radarSprite.rotation);
             tick++;
             // render the stage
             renderer.render(stage);
