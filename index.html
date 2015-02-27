@@ -9,8 +9,7 @@
             padding: 0;
             background-color: #000000;
         }
-    </style>
-    <script src="pixi.js"></script>
+    </style> <script src="pixi.js"></script>
 
 </head>
 <body>
@@ -20,64 +19,101 @@
     var endTick = 0;
     var width = 800;
     var height = 800;
-    var loader = new PIXI.JsonLoader("http://localhost:3008/replays/1");
+    var robots = {}
+    var bullets = []
+    var loader = new PIXI.JsonLoader("http://localhost:3008/replays/4");
     loader.on('loaded', function(event) {
         console.log(event.content.content.json);
         ticks = event.content.content.json.ticks;
         endTick =  ticks.length;
-    });
+
+        var tempRobots = event.content.content.json.robots;
+        for(var i = 0; i < tempRobots.length; i++) {
+            var robotContainer = new PIXI.DisplayObjectContainer();
+
+            var bodyTexture = PIXI.Texture.fromImage("robot-body.png");
+            var bodySprite = new PIXI.Sprite(bodyTexture);
+            bodySprite.anchor.x = 0.5;
+            bodySprite.anchor.y = 0.5;
+
+            var turretTexture = PIXI.Texture.fromImage("robot-turret.png");
+            var turretSprite = new PIXI.Sprite(turretTexture);
+            turretSprite.anchor.x = 0.5;
+            turretSprite.anchor.y = 0.5;
+
+            var radarTexture = PIXI.Texture.fromImage("robot-radar.png");
+            var radarSprite = new PIXI.Sprite(radarTexture);
+            radarSprite.anchor.x = 0.5;
+            radarSprite.anchor.y = 0.5;
+
+            var energyText = new PIXI.Text("");
+            energyText.anchor.x = 0.5;
+            energyText.anchor.y = 0.5;
+            energyText.position.y = 40;
+
+            robotContainer.addChild(bodySprite)
+            robotContainer.addChild(energyText);
+            bodySprite.addChild(turretSprite);
+            turretSprite.addChild(radarSprite);
+            stage.addChild(robotContainer);
+
+            var id = tempRobots[i].id;
+            robots[id] = {};
+            robots[id].robotContainer = robotContainer;
+            robots[id].bodySprite = bodySprite; 
+            robots[id].turretSprite = turretSprite; 
+            robots[id].radarSprite = radarSprite;
+            robots[id].energyText = energyText;
+        }
+    }); 
+    
     loader.load();
 
-    var stage = new PIXI.Stage(0x66FF99);
-
+    var bulletTexture = PIXI.Texture.fromImage("bullet.png");
+    var stage = new PIXI.Stage(0x7997a1);
     var renderer = new PIXI.WebGLRenderer(width, height);
-
     document.body.appendChild(renderer.view);
 
     requestAnimFrame( animate );
 
-
-
-
-    var bodyTexture = PIXI.Texture.fromImage("robot-body.png");
-    var bodySprite = new PIXI.Sprite(bodyTexture);
-    bodySprite.anchor.x = 0.5;
-    bodySprite.anchor.y = 0.5;
- 
-    var turretTexture = PIXI.Texture.fromImage("robot-turret.png");
-    var turretSprite = new PIXI.Sprite(turretTexture);
-    turretSprite.anchor.x = 0.5;
-    turretSprite.anchor.y = 0.5;
-
-    var radarTexture = PIXI.Texture.fromImage("robot-radar.png");
-    var radarSprite = new PIXI.Sprite(radarTexture);
-    radarSprite.anchor.x = 0.5;
-    radarSprite.anchor.y = 0.5;
-
-    bodySprite.addChild(turretSprite);
-    turretSprite.addChild(radarSprite);
-    stage.addChild(bodySprite);
-
     function animate() {
         requestAnimFrame( animate );
+        
         if(tick < endTick) {
-            state = ticks[tick].robotStates[0];
-            bodySprite.position.x = state.position.x;
-            bodySprite.position.y = state.position.y;
-            bodySprite.rotation = state.heading * Math.PI / 180.0;
-            console.log(bodySprite.rotation);
-            turretSprite.rotation = (state.gunHeading - state.heading) * Math.PI / 180;
-            console.log(turretSprite.rotation);
-            radarSprite.rotation = (state.radarheading - state.gunHeading - state.heading) * Math.PI/180;
-            console.log(radarSprite.rotation);
+            for(var i = 0; i < bullets.length; i++) {
+                stage.removeChild(bullets[i]);
+            }
+            bullets = [];
+            for(var i = 0; i < ticks[tick].bulletStates.length; i++) {
+                var state = ticks[tick].bulletStates[i]; 
+                var bulletSprite = new PIXI.Sprite(bulletTexture);
+                bulletSprite.anchor.x = 0.5;
+                bulletSprite.anchor.y = 0.5;
+                bulletSprite.position.x = state.position.x;
+                bulletSprite.position.y = state.position.y;
+                bullets.push(bulletSprite);
+                stage.addChild(bulletSprite);
+            }
+
+            for(var i = 0; i < ticks[tick].robotStates.length; i++) { 
+                var state = ticks[tick].robotStates[i];
+                var id =  state.id;
+                var robot = robots[id];
+
+                robot.robotContainer.position.x = state.position.x;
+                robot.robotContainer.position.y = state.position.y;
+                robot.bodySprite.rotation = state.heading * Math.PI / 180.0;
+                robot.turretSprite.rotation = (state.gunHeading - state.heading) * Math.PI / 180;
+                robot.radarSprite.rotation = (state.radarheading - state.gunHeading - state.heading) * Math.PI/180;
+                robots[id].energyText.setText(state.energy)
+            }
+
             tick++;
-            // render the stage
             renderer.render(stage);
         }
     }
 
     </script>
-
     </body>
 </html>
 
