@@ -21,7 +21,7 @@
     var height = 800;
     var robots = {}
     var bullets = []
-    var loader = new PIXI.JsonLoader("http://localhost:3008/replays/4");
+    var loader = new PIXI.JsonLoader("http://localhost:3008/replays/27");
     loader.on('loaded', function(event) {
         console.log(event.content.content.json);
         ticks = event.content.content.json.ticks;
@@ -104,7 +104,7 @@
                 robot.robotContainer.position.y = state.position.y;
                 robot.bodySprite.rotation = state.heading * Math.PI / 180.0;
                 robot.turretSprite.rotation = (state.gunHeading - state.heading) * Math.PI / 180;
-                robot.radarSprite.rotation = (state.radarheading - state.gunHeading - state.heading) * Math.PI/180;
+                robot.radarSprite.rotation = (state.radarHeading - state.gunHeading - state.heading) * Math.PI/180;
                 robots[id].energyText.setText(state.energy)
             }
 
