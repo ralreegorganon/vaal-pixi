@@ -19,15 +19,16 @@
     var endTick = 0;
     var width = 800;
     var height = 800;
-    var robots = {}
-    var bullets = []
-    var loader = new PIXI.JsonLoader("http://localhost:3008/replays/30");
-    loader.on('loaded', function(event) {
-        console.log(event.content.content.json);
-        ticks = event.content.content.json.ticks;
+    var robots = {};
+    var bullets = [];
+    var loader = PIXI.loader;
+    loader.add('replay', "http://localhost:3008/replays/30", {xhrType:'json'});
+    loader.once('complete', function(loader, resources) {
+        console.log(resources.replay.data);
+        ticks = resources.replay.data.ticks;
         endTick =  ticks.length;
 
-        var tempRobots = event.content.content.json.robots;
+        var tempRobots = resources.replay.data.robots;
         for(var i = 0; i < tempRobots.length; i++) {
             var robotContainer = new PIXI.DisplayObjectContainer();
 
@@ -70,14 +71,16 @@
     loader.load();
 
     var bulletTexture = PIXI.Texture.fromImage("bullet.png");
-    var stage = new PIXI.Stage(0x7997a1);
-    var renderer = new PIXI.WebGLRenderer(width, height);
+    var stage = new PIXI.Container();
+    var renderer = PIXI.autoDetectRenderer(width, height, { 
+        backgroundColor: 0x7997a1
+    });
     document.body.appendChild(renderer.view);
 
-    requestAnimFrame( animate );
+    requestAnimationFrame( animate );
 
     function animate() {
-        requestAnimFrame( animate );
+        requestAnimationFrame( animate );
         
         if(tick < endTick) {
             for(var i = 0; i < bullets.length; i++) {
@@ -105,7 +108,7 @@
                 robot.bodySprite.rotation = state.heading * Math.PI / 180.0;
                 robot.turretSprite.rotation = (state.gunHeading - state.heading) * Math.PI / 180;
                 robot.radarSprite.rotation = (state.radarHeading - state.gunHeading - state.heading) * Math.PI/180;
-                robots[id].energyText.setText(state.energy)
+                robots[id].energyText.text = state.energy;
             }
 
             tick++;
